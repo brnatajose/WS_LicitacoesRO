@@ -19,14 +19,24 @@ def extract_additional_info(item_url):
         item_soup = BeautifulSoup(response.text, 'html.parser')
 
         table_elem = item_soup.find('table', class_='table-condensed')
-        valor_estimado_elem = table_elem.find('td', string=re.compile(r'Valor Estimado', re.IGNORECASE))
-        valor_estimado = extract_monetary_value(valor_estimado_elem.find_next('td').text.strip()) if valor_estimado_elem else 'Não encontrado'
+        rows = table_elem.find_all('tr')
 
-        situacao_elem = table_elem.find('td', string=re.compile(r'Situação', re.IGNORECASE))
-        situacao = situacao_elem.find_next('td').text.strip() if situacao_elem else 'Não encontrado'
+        valor_estimado = 'Não encontrado'
+        situacao = 'Não encontrado'
+        data_abertura = 'Não encontrado'
 
-        data_abertura_elem = item_soup.find('td', string=re.compile(r'Data da Abertura', re.IGNORECASE))
-        data_abertura = data_abertura_elem.find_next('td').text.strip() if data_abertura_elem else 'Não encontrado'
+        for row in rows:
+            cells = row.find_all('td')
+            if len(cells) == 2:
+                header = cells[0].text.strip()
+                value = cells[1].text.strip()
+
+                if 'Valor Estimado' in header:
+                    valor_estimado = extract_monetary_value(value)
+                elif 'Situação' in header:
+                    situacao = value
+                elif 'Data da Abertura' in header:
+                    data_abertura = value
 
         unidade_administrativa_elem = item_soup.find('td', string=re.compile(r'Unidade Administrativa', re.IGNORECASE))
         unidade_administrativa = unidade_administrativa_elem.find_next('td').text.strip() if unidade_administrativa_elem else 'Não encontrado'
